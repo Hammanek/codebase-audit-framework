@@ -9,19 +9,8 @@ Tento repozitář obsahuje ucelenou sadu 10 auditních šablon, rychlý statick�
 ## 📋 Obsah repozitáře
 
 ```text
-├── AGENTS.md                        # Nativní instrukce a pravidla pro OpenCode
+├── AGENTS.md                        # Nativní instrukce a pravidla pro OpenCode & agenty
 ├── opencode.json                    # Konfigurace instrukcí pro OpenCode CLI / IDE
-├── agents/                          # 10 specializovaných subagentů pro OpenCode
-│   ├── audit-bezpecnost.md          # @audit-bezpecnost
-│   ├── audit-compliance-privacy.md  # @audit-compliance-privacy
-│   ├── audit-databaze.md            # @audit-databaze
-│   ├── audit-devops-cicd.md         # @audit-devops-cicd
-│   ├── audit-dokumentace.md         # @audit-dokumentace
-│   ├── audit-kvalita.md             # @audit-kvalita
-│   ├── audit-pristupnost.md         # @audit-pristupnost
-│   ├── audit-testovani.md           # @audit-testovani (Playwright standard)
-│   ├── audit-ux.md                  # @audit-ux
-│   └── audit-vykon.md               # @audit-vykon
 ├── skills/
 │   └── codebase-audit/
 │       ├── SKILL.md                 # Hlavní instrukční soubor pro AI agenty
@@ -31,7 +20,7 @@ Tento repozitář obsahuje ucelenou sadu 10 auditních šablon, rychlý statick�
 │           ├── README.md            # Návod k použití a procesní řetězec
 │           ├── 01_bezpecnost.md     # OWASP 2025, Auth, CSRF, CSP, Injekce
 │           ├── 02_databaze.md       # SQL, NoSQL (MongoDB), Redis cache, Fronty
-│           ├── 03_e2e_testovani.md  # E2E testovací záchranná síť, Playwright
+│           ├── 03_e2e_testovani.md  # E2E testovací záchranná síť, Playwright standard, POM
 │           ├── 04_vykon.md          # Latence, memory leaky, DOM thrashing, Async
 │           ├── 05_kvalita_kodu.md   # SOLID, DRY, mrtvý kód, architektura
 │           ├── 06_ux_ui.md          # Ergonomie, formuláře, loading states
@@ -104,20 +93,18 @@ OpenCode automaticky detekuje instrukce a pravidla v kořeni repozitáře i glob
     mkdir -p .opencode/skills
     cp -r skills/codebase-audit .opencode/skills/
     ```
-  - Pro subagenty nakopíruj složku `agents/` do `.opencode/agents/`.
+  - OpenCode skilly automaticky objeví a načítá on-demand při požadavku na audit libovolné oblasti.
 
 * **Globální konfigurace pro všechny projekty:**
-  - Zkopíruj `AGENTS.md`, `agents/` a skilly do globálního adresáře OpenCode:
+  - Zkopíruj `AGENTS.md` a skill do globálního adresáře OpenCode:
     - **Windows:**
       ```powershell
       Copy-Item "AGENTS.md" "$env:USERPROFILE\.config\opencode\" -Force
-      Copy-Item "agents\*" "$env:USERPROFILE\.config\opencode\agents\" -Recurse -Force
       Copy-Item "skills\codebase-audit" "$env:USERPROFILE\.config\opencode\skills\" -Recurse -Force
       ```
     - **Linux / macOS:**
       ```bash
       cp AGENTS.md ~/.config/opencode/
-      cp -r agents/* ~/.config/opencode/agents/
       cp -r skills/codebase-audit ~/.config/opencode/skills/
       ```
 
