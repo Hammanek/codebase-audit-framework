@@ -11,6 +11,17 @@ Tento repozitář obsahuje ucelenou sadu 10 auditních šablon, rychlý statick�
 ```text
 ├── AGENTS.md                        # Nativní instrukce a pravidla pro OpenCode
 ├── opencode.json                    # Konfigurace instrukcí pro OpenCode CLI / IDE
+├── agents/                          # 10 specializovaných subagentů pro OpenCode
+│   ├── audit-bezpecnost.md          # @audit-bezpecnost
+│   ├── audit-compliance-privacy.md  # @audit-compliance-privacy
+│   ├── audit-databaze.md            # @audit-databaze
+│   ├── audit-devops-cicd.md         # @audit-devops-cicd
+│   ├── audit-dokumentace.md         # @audit-dokumentace
+│   ├── audit-kvalita.md             # @audit-kvalita
+│   ├── audit-pristupnost.md         # @audit-pristupnost
+│   ├── audit-testovani.md           # @audit-testovani (Playwright standard)
+│   ├── audit-ux.md                  # @audit-ux
+│   └── audit-vykon.md               # @audit-vykon
 ├── skills/
 │   └── codebase-audit/
 │       ├── SKILL.md                 # Hlavní instrukční soubor pro AI agenty
@@ -44,7 +55,7 @@ Tento repozitář obsahuje ucelenou sadu 10 auditních šablon, rychlý statick�
 | **02** | **DevOps & CI/CD** | [`09_devops_cicd.md`](skills/codebase-audit/references/09_devops_cicd.md) | GitHub Actions, Docker (root vs non-root), secrety v CI, lockfile integrita |
 | **03** | **Databáze & Data** | [`02_databaze.md`](skills/codebase-audit/references/02_databaze.md) | Schéma, cizí klíče, transakce, NoSQL (MongoDB), Redis TTL, RabbitMQ fronty |
 | **04** | **Soukromí & GDPR** | [`10_compliance_privacy.md`](skills/codebase-audit/references/10_compliance_privacy.md) | PII v logách, právo na výmaz, consent gating, audit trail |
-| **05** | **E2E testování** | [`03_e2e_testovani.md`](skills/codebase-audit/references/03_e2e_testovani.md) | Pokrytí kritických uživatelských cest, stabilita selektorů, CI běh |
+| **05** | **E2E testování** | [`03_e2e_testovani.md`](skills/codebase-audit/references/03_e2e_testovani.md) | Playwright standard, POM, web-first assertions, 100% náhrada manuálního testování |
 | **06** | **Výkon** | [`04_vykon.md`](skills/codebase-audit/references/04_vykon.md) | Latence backendu, memory leaky, DOM layout thrashing, unblocking event loop |
 | **07** | **Kvalita kódu** | [`05_kvalita_kodu.md`](skills/codebase-audit/references/05_kvalita_kodu.md) | SOLID principy, DRY, mrtvý kód, typová bezpečnost, technický dluh |
 | **08** | **UX & UI** | [`06_ux_ui.md`](skills/codebase-audit/references/06_ux_ui.md) | Navigace, validace formulářů, zpětná vazba, chybová hlášení, empty states |
@@ -93,12 +104,22 @@ OpenCode automaticky detekuje instrukce a pravidla v kořeni repozitáře i glob
     mkdir -p .opencode/skills
     cp -r skills/codebase-audit .opencode/skills/
     ```
-  - OpenCode skilly automaticky objeví a načítá on-demand.
+  - Pro subagenty nakopíruj složku `agents/` do `.opencode/agents/`.
 
 * **Globální konfigurace pro všechny projekty:**
-  - Zkopíruj `AGENTS.md` do globálního adresáře OpenCode:
-    - **Windows:** `%USERPROFILE%\.config\opencode\AGENTS.md`
-    - **Linux / macOS:** `~/.config/opencode/AGENTS.md`
+  - Zkopíruj `AGENTS.md`, `agents/` a skilly do globálního adresáře OpenCode:
+    - **Windows:**
+      ```powershell
+      Copy-Item "AGENTS.md" "$env:USERPROFILE\.config\opencode\" -Force
+      Copy-Item "agents\*" "$env:USERPROFILE\.config\opencode\agents\" -Recurse -Force
+      Copy-Item "skills\codebase-audit" "$env:USERPROFILE\.config\opencode\skills\" -Recurse -Force
+      ```
+    - **Linux / macOS:**
+      ```bash
+      cp AGENTS.md ~/.config/opencode/
+      cp -r agents/* ~/.config/opencode/agents/
+      cp -r skills/codebase-audit ~/.config/opencode/skills/
+      ```
 
 ### 2. Google Antigravity
 Zkopíruj složku `skills/codebase-audit` do tvého konfiguračního adresáře:
