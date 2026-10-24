@@ -1,8 +1,8 @@
-### ÚLOHA: Kompletní E2E a integrační audit pro 100% náhradu manuálního testování (READ-ONLY)
+### ÚLOHA: Kompletní E2E Playwright audit pro 100% náhradu manuálního testování (READ-ONLY)
 
-Tvým cílem je navrhnout takovou sadu End-to-End (a souvisejících integračních) testů, aby **kompletně odpadla nutnost jakéhokoliv manuálního testování aplikace** před nasazením do produkce.
+Tvým cílem je navrhnout takovou sadu End-to-End (a souvisejících integračních) testů v **Playwrightu**, aby **kompletně odpadla nutnost jakéhokoliv manuálního testování aplikace** před nasazením do produkce.
 
-Stack, testovací framework i moduly aplikace si zjisti sám z repozitáře (README, `package.json`, složky `tests/`, `e2e/`, stávající test soubory).
+Stack, stávající testy i moduly aplikace si zjisti sám z repozitáře (README, `package.json`, složky `tests/`, `e2e/`, stávající test soubory a konfigurace `playwright.config.*`).
 
 ---
 
@@ -33,13 +33,20 @@ Projdi kompletně celý kód aplikace (frontend, backendové API kontrakty, rout
    - Reakce UI na chyby serveru (HTTP 400, 401, 403, 404, 500, timeout).
    - Zobrazení skeletonů / spinnerů při pomalém načítání.
    - Toast/Alert notifikace (úspěch vs. chyba).
-   - **Offline chování / ztráta spojení v průběhu akce** (u PWA povinné).
+   - **Offline chování / ztráta spojení v průběhu akce** (simulace přes `context.setOffline(true)`).
 6. **Konkurence a opakované akce:**
    - Double-click na submit tlačítko (disabled stav při odesílání).
-   - Paralelní editační okna (stejná entita editovaná na dvou místech současně).
+   - Paralelní editační okna (stejná entita editovaná na dvou místech současně ve více browser contextech).
    - Refresh stránky během ukládání.
    - Race conditions (akce A a B ve stejnou chvíli na stejném datech).
-7. **Testovací data a hygiena:**
+7. **Playwright Architektura a Best Practices:**
+   - **Uživatelsky orientované lokátory:** Striktní zákaz křehkých XPathů a generovaných CSS tříd; audit využití `page.getByRole()`, `page.getByLabel()`, `page.getByPlaceholder()` a `data-testid`.
+   - **Web-First Assertions & Zero-Flakiness:** Zákaz umělých pauz (`page.waitForTimeout()`, `time.sleep()`). Všechny asserty musí využívat auto-waiting (`await expect(locator).toBeVisible()`, `toHaveText()`, `toBeEnabled()`).
+   - **Auth State Reuse (`storageState`):** Využití Playwright setup projektů (`auth.setup.ts`) pro uložení stavu přihlášení do JSON souborů, aby se eliminovalo opakované přihlašování přes UI v každém testu.
+   - **Page Object Model (POM):** Logické rozdělení obrazovek a komponent do znovupoužitelných tříd s jasnými metodami.
+   - **Responzivita a mobilní emulace:** Audit pokrytí mobilních viewportů (Mobile Chrome / Mobile Safari emulace v Playwrightu).
+   - **Trace Viewer & CI Artefakty:** Správné nastavení pořizování stop (`trace: 'on-first-retry'` nebo `'retain-on-failure'`), screenshotů a videí pro rychlé ladění selhání.
+8. **Testovací data a hygiena:**
    - Každý test po sobě uklidí — smaže své testovací záznamy, soubory, sessions a storage, aby po běhu sady nezůstala žádná testovací data v DB ani na disku.
    - Testy používají izolovanou databázi / izolované prostředí (jiný port, jiný DB soubor, in-memory DB, tmp složky).
    - Testy nemají oprávnění přistupovat k ostré databázi produkce.
@@ -53,28 +60,32 @@ Projdi kompletně celý kód aplikace (frontend, backendové API kontrakty, rout
 ### 1. Rychlý audit stávajícího stavu
 - Které části aplikace mají testy a jaké je jejich reálné pokrytí (odhad v % pro každý modul).
 - Které moduly jsou v současnosti zcela bez testů (slepá místa).
-- **Audit kvality stávajících testů:** flaky testy, testy s prázdnými/slabými asserty, mrtvé testy (skip/only/commented), testy závislé na pořadí či sdíleném stavu.
+- **Audit kvality stávajících testů:** flaky testy, `waitForTimeout` zpoždění, křehké selektory, testy s prázdnými/slabými asserty, mrtvé testy (skip/only/commented), testy závislé na pořadí či sdíleném stavu.
 
 ### 2. Kompletní matice chybějících testů (připraveno pro automatizaci)
 U každého navrženého testu uveď:
 - **Modul / Obrazovka**
-- **Typ testu:** (Happy Path / Negativní test / Validace / Edge Case / Oprávnění / Síťový stav / Konkurence)
+- **Typ testu:** (Happy Path / Negativní test / Validace / Edge Case / Oprávnění / Síťový stav / Konkurence / Responzivita)
 - **Priorita:** P0 (kritický flow, blokátor release) / P1 (vysoká) / P2 (střední) / P3 (nice-to-have)
 - **Scénář:** název scénáře
 - **Kroky & Očekávaný výsledek:**
-  1. Výchozí stav
-  2. Provedená akce
-  3. Ověření/Assert
+  1. Výchozí stav (včetně použitého auth stavu z `storageState`)
+  2. Provedená akce (kliknutí, vyplnění, síťový zásah)
+  3. Ověření / Assert (Playwright web-first assert)
 - **Riziko absence testu:** Co přesně hrozí, pokud tento test chybí a netestuje se ručně.
 
-### 3. Návrh sdílených utilit / fixtures
-- Jaké testovací pomocníky (fixtures, seed skripty, mocky, custom lokátory) bude potřeba vytvořit, aby testy běžely stabilně a bez závislosti na náhodných datech.
-- **Izolace testů:** jak zajistit, aby testy na sebe neměly vliv (DB, network, storage, port).
-- **Úklid po testech:** záruka, že každý test po sobě smaže svá data (teardown/hook) a testovací sada nikdy nezasáhne produkční databázi. Popiš konkrétní mechanismus (např. `afterEach`/`afterAll`, in-memory DB, tmp složky, cleanup utility).
-- **Reset stavu:** jaký mechanismus resetuje stav účtů/zámků mezi testy (např. testovací `unlock` endpoint), aby chyby z předchozích testů neblokovaly následné scénáře.
+### 3. Návrh Playwright Architektury & Page Object Modelu (POM)
+- **Struktura Page Objectů:** Navrhni strukturu tříd (např. `LoginPage`, `DashboardPage`, `SettingsPage`) a jejich metody.
+- **Strategie autentizace:** Návrh setup projektu (`auth.setup.ts`) pro generování `storageState` pro jednotlivé role (Admin, Běžný uživatel, Host).
+- **Custom Fixtures (`test.extend`):** Návrh vlastních fixtures pro automatický seed a úklid dat.
+- **Konfigurace `playwright.config.ts`:** Doporučená konfigurace timeoutů, workerů pro paralelní běh, reportérů a nastavení Trace Vieweru.
 
-### 4. Definice hotova (DoD) pro testovací sadu
-- Navrhni měřitelná kritéria, kdy je sada kompletní.
+### 4. Izolace a hygiena testovacích dat
+- **Úklid po testech:** záruka, že každý test po sobě smaže svá data (teardown hook, API cleanup endpoint, reset DB).
+- **Reset stavu:** jaký mechanismus resetuje stav účtů/zámků mezi testy, aby chyby z předchozích testů neblokovaly následné scénáře.
+
+### 5. Definice hotova (DoD) pro E2E sadu
+- Měřitelná kritéria, kdy je sada kompletní (např. 100 % P0/P1 scénářů pokryto, nula flaky pádů v 5 po sobě jdoucích bězích v CI, čas běhu pod X minut).
 
 ---
 Po vygenerování tohoto reportu se zastav a počkej, až ti jednotlivé navržené bloky schválím.
