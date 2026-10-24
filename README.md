@@ -1,6 +1,6 @@
 # Codebase Audit Framework & Agent Protocol 🛡️⚡
 
-> **Kompletní produkční sada auditních metodik, statických skenerů a globálních pravidel pro AI vývojové asistenty (Antigravity, Cursor, Claude Code, Windsurf).**
+> **Kompletní produkční sada auditních metodik, statických skenerů a globálních pravidel pro AI vývojové asistenty (Antigravity, OpenCode, Cursor, Claude Code, Windsurf).**
 
 Tento repozitář obsahuje ucelenou sadu 10 auditních šablon, rychlý statický analyzátor a striktní procesní pravidla garantující, že AI agent provádí analýzy na základě reálných důkazů (`soubor:řádek`), nezpůsobuje regrese a nepouští se do změn kódu bez předchozího otestování.
 
@@ -9,6 +9,8 @@ Tento repozitář obsahuje ucelenou sadu 10 auditních šablon, rychlý statick�
 ## 📋 Obsah repozitáře
 
 ```text
+├── AGENTS.md                        # Nativní instrukce a pravidla pro OpenCode & kompatibilní agenty
+├── opencode.json                    # Konfigurace instrukcí pro OpenCode CLI / IDE
 ├── skills/
 │   └── codebase-audit/
 │       ├── SKILL.md                 # Hlavní instrukční soubor pro AI agenty
@@ -81,13 +83,30 @@ Základní filozofie, kterou tento repozitář prosazuje pro spolupráci s AI ag
 
 ## 📥 Jak integrovat do vývojového prostředí
 
-### Google Antigravity
+### 1. OpenCode (`opencode`)
+OpenCode automaticky detekuje instrukce a pravidla v kořeni repozitáře i globálně:
+
+* **Projektová integrace:**
+  - V kořeni tvého projektu nechej soubor `AGENTS.md` a `opencode.json` (nebo do něj přidej cestu k `rules/*.md`).
+  - Pro načítání skillů nakopíruj nebo nalinkuj složku skillu do `.opencode/skills/`:
+    ```bash
+    mkdir -p .opencode/skills
+    cp -r skills/codebase-audit .opencode/skills/
+    ```
+  - OpenCode skilly automaticky objeví v `.opencode/skills/` i `.agents/skills/`.
+
+* **Globální konfigurace pro všechny projekty:**
+  - Zkopíruj `AGENTS.md` do globálního adresáře OpenCode:
+    - Linux / macOS: `~/.config/opencode/AGENTS.md`
+    - Windows: `%USERPROFILE%\.config\opencode\AGENTS.md`
+
+### 2. Google Antigravity
 Zkopíruj složku `skills/codebase-audit` do tvého konfiguračního adresáře:
 ```bash
 cp -r skills/codebase-audit ~/.gemini/config/skills/
 ```
 
-### Claude Code / Cursor / Windsurf
+### 3. Claude Code / Cursor / Windsurf
 Přidej obsah souborů z `rules/` do tvých instrukcí pro asistenta (`.cursorrules`, `CLAUDE.md` nebo system promptu) a přilož příslušné šablony z `references/` před zahájením auditu.
 
 ---
